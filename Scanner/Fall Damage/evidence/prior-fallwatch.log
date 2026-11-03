@@ -1,0 +1,29 @@
+00:14:26 watch v2 on
+00:14:43 descent 140.8 studs in 0.95s (142 -> 1) peak -525.6/s phys -1.5/s falling=true state=Land tp=0.14587721286898292 fly=false farm=false
+00:14:43 HIT -799.6 = 74.92% of max 1067 | Concavenator Juvenile scale 2.071 | 0.34s after that descent | y 0.3
+00:17:23 descent 143.6 studs in 1.03s (144 -> 1) peak -334.9/s phys -1.5/s falling=true state=nil tp=0.7926609462138128 fly=false farm=false
+00:17:32 descent 7.5 studs in 0.60s (-0 -> -8) peak -20.0/s phys -36.6/s falling=true state=nil tp=-8.024986826761003 fly=false farm=false
+00:19:00 descent 566.6 studs in 0.44s (-8 -> -574) peak -3654.9/s phys -5642.7/s falling=true state=Land tp=-574.3518676757812 fly=false farm=false
+00:19:02 descent 7.1 studs in 0.39s (-60 -> -67) peak -36.3/s phys -26.3/s falling=true state=Land tp=-67.2192592188716 fly=false farm=false
+00:20:18 descent 7.5 studs in 0.54s (40 -> 32) peak -22.3/s phys -42.3/s falling=true state=nil tp=32.021727002279526 fly=false farm=false
+00:22:06 descent 8.2 studs in 0.61s (13 -> 5) peak -24.9/s phys -28.7/s falling=true state=nil tp=4.344272530691389 fly=false farm=false
+00:25:59 descent 7.0 studs in 0.59s (-0 -> -7) peak -17.9/s phys -32.4/s falling=true state=Land tp=-8.02504881559157 fly=false farm=false
+00:29:31 descent 561.0 studs in 0.60s (-7 -> -568) peak -2085.5/s phys -5614.3/s falling=true state=Land tp=-568.1044921875 fly=false farm=false
+00:29:32 descent 7.2 studs in 0.38s (-60 -> -67) peak -44.8/s phys -27.3/s falling=true state=Land tp=-67.2192592188716 fly=false farm=false
+00:30:58 HIT -1132.0 = 72.00% of max 1572 | Concavenator Adolescent scale 1.136 | 85.37s after that descent | y -57.8
+00:30:58 descent 44.8 studs in 1.00s (-13 -> -58) peak -106.8/s phys -20.6/s falling=true state=Land tp=nil fly=false farm=false
+00:32:59 descent 12.0 studs in 2.01s (-47 -> -59) peak -18.8/s phys 0.0/s falling=true state=Land tp=nil fly=false farm=false
+00:33:03 descent 8.0 studs in 0.31s (-47 -> -55) peak -70.4/s phys 0.0/s falling=true state=Land tp=-55.360809326171875 fly=false farm=false
+00:33:09 descent 12.0 studs in 0.07s (-47 -> -59) peak -270.0/s phys 0.0/s falling=true state=Land tp=nil fly=false farm=false
+00:33:13 descent 11.8 studs in 0.61s (-47 -> -59) peak -40.6/s phys -38.6/s falling=true state=Land tp=nil fly=false farm=false
+00:42:06 HIT -530.9 = 27.00% of max 1966 | Concavenator Adolescent scale 1.333 | 532.33s after that descent | y -57.7
+00:42:07 descent 22.0 studs in 3.69s (-39 -> -61) peak -19.1/s phys 0.0/s falling=true state=Land tp=nil fly=false farm=false
+00:42:11 descent 7.0 studs in 0.23s (-39 -> -46) peak -92.5/s phys 0.0/s falling=true state=Land tp=-46.157684326171875 fly=false farm=false
+00:42:13 descent 7.0 studs in 0.22s (-46 -> -53) peak -78.4/s phys 0.0/s falling=true state=Land tp=-53.157684326171875 fly=false farm=false
+00:42:15 HIT -534.7 = 27.20% of max 1966 | Concavenator Adolescent scale 1.333 | 2.10s after that descent | y -61.2
+00:42:15 descent 8.0 studs in 0.27s (-53 -> -61) peak -74.8/s phys 0.0/s falling=true state=Land tp=nil fly=false farm=false
+00:43:43 HIT -498.8 = 25.37% of max 1966 | Concavenator Adolescent scale 1.333 | 88.08s after that descent | y -61.0
+00:43:44 descent 22.0 studs in 0.15s (-39 -> -61) peak -390.5/s phys 0.0/s falling=true state=Land tp=nil fly=false farm=false
+00:45:24 HIT -499.3 = 25.39% of max 1966 | Concavenator Adolescent scale 1.333 | 100.90s after that descent | y -61.1
+00:45:25 descent 22.0 studs in 0.87s (-39 -> -61) peak -63.0/s phys -58.1/s falling=true state=Land tp=nil fly=false farm=false
+00:54:26 watch off

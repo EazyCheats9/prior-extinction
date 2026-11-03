@@ -1,0 +1,18 @@
+Prior Extinction release built 2026-11-02T02:43:35.846Z
+premium source: C:\Users\phoen\Desktop\EazyCheats\Products\Roblox\Prior Extinction\Testing\Prior Extinction.lua
+obfuscation: protect.js --seed 42 --rename --verify --max-locals 200
+
+free build derived from the premium source
+menus build headless: free AutoFarm is all locked premium rows (3), 5x caps, and premium flags stay off after an all-on config
+mouse hand-back: every scenario passes (premium + free, immediate + deferred signals)
+premium plain: compiles at -O0, watermark x2
+free plain: compiles at -O0, watermark x2
+premium obf: 22604 renames token-identical, 2849 strings round-trip, no new globals, compiles at -O0, watermark x1
+free obf: 22638 renames token-identical, 2875 strings round-trip, no new globals, compiles at -O0, watermark x1
+titles: premium plain/obf PREMIUM, free plain/obf FREE
+full load: prior-premium.plain.lua vs prior-premium.obf.lua: top level finished and said "loaded", 140 menu calls identical, 13 loops started identically, 0 stand-in errors identical
+full load: prior-free.plain.lua vs prior-free.obf.lua: top level finished and said "loaded", 119 menu calls identical, 13 loops started identically, 0 stand-in errors identical
+prior-premium.plain.lua  840432 bytes  sha256 8647ebf071318711cb32ac953b367c8e4d9898840b88e9c694d478d044ead6ae
+prior-free.plain.lua  842173 bytes  sha256 86f3185e6f2631e085c2d88c9097744d2cdf1437670ada73778a3e24181648c0
+prior-premium.obf.lua  515673 bytes  sha256 2639839626f6086ffe86f1a92f13767943d368b235b516dd2a31bf9a3767ee48
+prior-free.obf.lua  517356 bytes  sha256 7b5f9142c4586344972a21740e1b1dc4fe037b81c3c2f61e0d7d56496d31d274

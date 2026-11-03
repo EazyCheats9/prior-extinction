@@ -1,0 +1,154 @@
+  Dino Name
+  Drag Stats Card
+  Growth Stage
+  Growth Timer
+  Hide While Menu Open
+  Mass Gain Multiplier
+  Nutrition Stats
+  Stage Timer
+  Weight
+  Wellbeing Stats
+AFK Farm
+Admin Kick
+Allow Unlocking New Dinos
+Anti AFK
+Attack Speed
+Auto Cleanliness
+Auto Grow
+Auto Leave
+Auto Run
+Auto Spawn
+Auto Sprint
+Auto Switch Dino
+Auto Trot
+Auto Walk
+Auto Water
+Auto-Leave Empty Server
+Auto-Save Threshold %
+Auto-Save at Health %
+Bleed ESP
+Carry Any Corpse
+Chams Fill Transparency
+Chams Outline Transparency
+Clay Distance
+Corpse Distance
+Corpse/Meat Text Size
+Corpses on Minimap
+Custom Time
+Disable Weather
+ESP Distance
+Eat Only When Hungry
+Enable Chams
+Enable ESP
+Enable Hitbox Expander
+Enable Reach
+Enable Silent Aim
+Enable Tracers
+FOV
+FOV Changer
+FPS Saver
+Farm Dino
+Farm Speed
+Farm Timer
+Fast Eat
+Fish ESP
+Flee From Players
+Fly
+Fly Speed
+Food Bar
+Food Number
+Force Eat
+Fossil Farm
+Fossil Farm Speed
+Fossils on Minimap
+Fullbright
+Health Bar Height
+Health Bar Width
+Hide Eaten Plants
+Hitbox Multiplier
+Hour
+Include Bleed
+Infected Tag
+Infection Bar
+Infection Number
+Infinite Oxygen
+Instant Attack
+Large Fossil Distance
+Large Fossils
+Leave After (minutes)
+Leave Scraps
+Leave Under (players)
+Legit Admin Kick
+Legit Avoid Radius
+Legit Farm
+Legit Flee From Players
+Legit Fly Away From Players
+Legit Fly Away Radius
+Legit Leave Scraps
+Legit Never Stand Still
+Legit Rest To Heal
+Legit Search Distance
+Legit Tab Out
+Legit Unstuck
+Max Labels
+Meat Distance
+Medium Fossil Distance
+Medium Fossils
+Minimap
+Mod Check
+No Attack Cooldown
+No Blur
+No Fall Damage
+No Fog
+No Sleep Screen
+Only My Diet
+Pack ESP
+Pack Leader ESP
+Player Avoid Radius
+Players on Minimap
+Quick Set
+Quick Turn
+Reach Multiplier
+Reach Visual Opacity
+Rejoin
+Rejoin Map
+Reset Stats Card Position
+Safety (Hide & Heal)
+Save Dino
+Show Clay Deposits
+Show Corpses
+Show Dino Type
+Show Distance
+Show Gender
+Show Health
+Show Infection
+Show Meat
+Show Module List
+Show Name
+Show Stage
+Show Stamina
+Show Turn Buttons
+Show Weight
+Simulate Walking
+Skin
+Small Fossil Distance
+Small Fossils
+Smallest To Biggest
+Stamina Bar Height
+Stamina Bar Width
+Stats Card
+Switch Gender
+Switch Slot 
+Text Highlight
+Text Size
+Turn Strength
+Unlimited Zoom
+Unstuck
+Vegetation Distance
+Vegetation ESP
+Visual Opacity
+Visualize Hitboxes
+Visualize Reach
+Water Anywhere
+Water Bar
+Water Number

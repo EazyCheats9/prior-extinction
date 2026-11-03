@@ -1,0 +1,251 @@
+-- ============================================================================
+--  EazyCheats | ADMIN SCRIPT  (owner-only)
+--  Loaded by the loader ONLY when getgenv().EazyCheats_AdminKey == the admin key,
+--  and served ONLY by the key-gated backend endpoint — so the free and premium
+--  builds never contain any of this code.
+--
+--  v1: EZ ESP — a small purple "EZ" tag above every player in THIS server who is
+--  running the EazyCheats script. Who that is comes from the hub's presence beacon:
+--  each hub POSTs {hwid,userId,jobId,...} to /api/hwid-report on load, and this
+--  script asks /api/hwid-present (admin-key gated) for the userIds in our jobId.
+--  Hitboxes come next — this is the ESP first, as asked.
+--
+--  This is the OWNER'S LOCAL LAUNCHER: it loads the full premium hub first, then
+--  overlays the admin tools below. Public free/premium never load this file.
+-- ============================================================================
+
+-- 1) Load the full premium Prior hub — FULLY LOCAL, no key system. The hub build sits next to this
+--    file in your workspace (prior-premium.obf.lua), so it loads straight off disk with no key box.
+--    Falls back to the online loader ONLY if that local file is missing.
+do
+    local hubSrc
+    pcall(function() hubSrc = readfile("prior-premium.obf.lua") end)
+    if type(hubSrc) ~= "string" or #hubSrc < 1000 then
+        pcall(function() hubSrc = game:HttpGet("https://eazycheats.com/s/priorpremium") end)
+    end
+    if type(hubSrc) == "string" and #hubSrc > 0 then
+        pcall(function() loadstring(hubSrc)() end)
+    end
+end
+
+-- 2) Admin overlay — added once on top of the hub.
+if getgenv and getgenv().EazyCheats_Admin_Loaded then return end
+if getgenv then getgenv().EazyCheats_Admin_Loaded = true end
+
+local Players       = game:GetService("Players")
+local RunService    = game:GetService("RunService")
+local HttpService   = game:GetService("HttpService")
+local LocalPlayer   = Players.LocalPlayer
+
+local ADMIN = {}
+ADMIN.PRESENT_URL = "https://eazycheats.com/api/hwid-present"
+ADMIN.TAG_COLOR   = Color3.fromRGB(170, 70, 255)   -- purple
+ADMIN.REFRESH     = 20                              -- seconds between presence polls
+ADMIN.present     = {}                              -- [userId] = true (running the script here)
+ADMIN.tags        = setmetatable({}, { __mode = "k" })  -- [Player] = BillboardGui
+ADMIN.unloaded    = false
+ADMIN.espOn       = true                                -- EZ tags on script users (toggle in the Admin tab)
+
+-- Loader sets getgenv().EazyCheats_AdminKey; this local build falls back to the key directly so you
+-- can just execute the file yourself. Must match the server's ADMIN_SCRIPT_KEY. LOCAL-ONLY file.
+local KEY = tostring((getgenv and getgenv().EazyCheats_AdminKey) or "AdminKey@99")
+local HWID = "unknown"
+pcall(function() if gethwid then HWID = tostring(gethwid()) end end)
+
+-- request() with the usual executor fallbacks (game:HttpGet also works for our own domain,
+-- but request lets us send the key in a header instead of the URL).
+local httpReq = (type(request) == "function" and request)
+    or (type(http_request) == "function" and http_request)
+    or (type(syn) == "table" and type(syn.request) == "function" and syn.request)
+    or nil
+
+-- Ask the backend which userIds in our server are running the script. The endpoint validates the
+-- admin key server-side (the real gate) and returns { ok = true, users = { <id>, ... } }.
+local function fetchPresent()
+    if not httpReq then return nil end
+    local url = ADMIN.PRESENT_URL
+        .. "?jobId=" .. HttpService:UrlEncode(game.JobId)
+        .. "&placeId=" .. HttpService:UrlEncode(tostring(game.PlaceId))
+    local ok, resp = pcall(httpReq, {
+        Url = url,
+        Method = "GET",
+        Headers = { ["x-admin-key"] = KEY, ["x-hwid"] = HWID },
+    })
+    if not ok or type(resp) ~= "table" or type(resp.Body) ~= "string" then return nil end
+    local decoded
+    local dok = pcall(function() decoded = HttpService:JSONDecode(resp.Body) end)
+    if not dok or type(decoded) ~= "table" or decoded.ok ~= true then return nil end
+    local set = {}
+    for _, id in ipairs(decoded.users or {}) do
+        local n = tonumber(id)
+        if n then set[n] = true end
+    end
+    return set
+end
+
+-- Root part to hang the tag on. Prior dinos have no standard Head; use HumanoidRootPart / Body /
+-- the first BasePart, same fallback chain the hub uses.
+local function rootOf(char)
+    if not char then return nil end
+    return char:FindFirstChild("HumanoidRootPart")
+        or char:FindFirstChild("Body")
+        or char:FindFirstChildWhichIsA("BasePart")
+end
+
+local function makeTag(player)
+    local root = rootOf(player.Character)
+    if not root then return nil end
+    local bb = Instance.new("BillboardGui")
+    bb.Name = "EZ_AdminTag"
+    bb.Size = UDim2.fromOffset(46, 22)
+    bb.StudsOffsetWorldSpace = Vector3.new(0, 7, 0)
+    bb.AlwaysOnTop = true
+    bb.MaxDistance = 5000
+    bb.LightInfluence = 0
+    bb.Adornee = root
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.fromScale(1, 1)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = "EZ"
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextSize = 18
+    lbl.TextColor3 = ADMIN.TAG_COLOR
+    lbl.TextStrokeTransparency = 0
+    lbl.TextStrokeColor3 = Color3.new(0, 0, 0)
+    lbl.Parent = bb
+    local parent = (gethui and gethui()) or game:GetService("CoreGui")
+    pcall(function() bb.Parent = parent end)
+    if not bb.Parent then bb.Parent = LocalPlayer:WaitForChild("PlayerGui") end
+    return bb
+end
+
+-- Add/refresh a tag for a player who should have one; drop it if their character/root changed.
+local function ensureTag(player)
+    local bb = ADMIN.tags[player]
+    if bb and bb.Parent then
+        local root = rootOf(player.Character)
+        if root and bb.Adornee ~= root then bb.Adornee = root end
+        if not root then bb:Destroy(); ADMIN.tags[player] = nil end
+        return
+    end
+    local made = makeTag(player)
+    if made then ADMIN.tags[player] = made end
+end
+
+local function dropTag(player)
+    local bb = ADMIN.tags[player]
+    if bb then pcall(function() bb:Destroy() end) end
+    ADMIN.tags[player] = nil
+end
+
+-- Reconcile tags to the present-set: tag present players, drop everyone else.
+local function reconcile()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and ADMIN.present[player.UserId] then
+            ensureTag(player)
+        else
+            dropTag(player)
+        end
+    end
+end
+
+-- Poll loop: refresh the present-set, then reconcile. A tag whose adornee streamed out is
+-- rebuilt on the next reconcile, so this doubles as tag maintenance.
+task.spawn(function()
+    while not ADMIN.unloaded do
+        local set = fetchPresent()
+        if set then ADMIN.present = set end
+        if ADMIN.espOn then reconcile() end
+        for _ = 1, ADMIN.REFRESH do
+            if ADMIN.unloaded then break end
+            task.wait(1)
+        end
+    end
+end)
+
+-- Keep tags glued through respawns without waiting for the next poll.
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        task.wait(0.5)
+        if not ADMIN.unloaded and ADMIN.present[player.UserId] then ensureTag(player) end
+    end)
+end)
+for _, player in ipairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then
+        player.CharacterAdded:Connect(function()
+            task.wait(0.5)
+            if not ADMIN.unloaded and ADMIN.present[player.UserId] then ensureTag(player) end
+        end)
+    end
+end
+Players.PlayerRemoving:Connect(dropTag)
+
+-- === "Script users can't hit me" toggle ===
+-- Marks us protected in the backend; every other script user's hub reads the per-server list off its
+-- beacon and makes our detection hitbox unqueryable ON THEIR CLIENT, so their attacks can't land on us.
+-- TTL-refreshed so it auto-clears if we leave/crash. Normal (non-script) players don't run the hub, so
+-- they can still hit us — this only stops fellow script users.
+ADMIN.PROTECT_URL = "https://eazycheats.com/api/admin-protect"
+ADMIN.protectOn = false
+function ADMIN.setProtect(on)
+    ADMIN.protectOn = on and true or false
+    if not httpReq then return end
+    pcall(httpReq, {
+        Url = ADMIN.PROTECT_URL,
+        Method = "POST",
+        Headers = { ["Content-Type"] = "application/json", ["x-admin-key"] = KEY },
+        Body = HttpService:JSONEncode({
+            key = KEY, jobId = game.JobId, userId = LocalPlayer.UserId, on = ADMIN.protectOn,
+        }),
+    })
+end
+-- Refresh the TTL while protection is on (the server expires it after ~60s).
+task.spawn(function()
+    while not ADMIN.unloaded do
+        if ADMIN.protectOn then ADMIN.setProtect(true) end
+        for _ = 1, 20 do if ADMIN.unloaded then break end task.wait(1) end
+    end
+end)
+
+-- Admin controls live as a REAL "Admin" tab in the hub's own menu, added locally once the hub is up
+-- (getgenv().__PX_EZ_WIN is the GUI library window). It sits next to AutoFarm/Stats/Combat/… — and the
+-- public free/premium builds never contain any of this, since the tab is added at runtime by THIS file.
+task.spawn(function()
+    local win
+    for _ = 1, 200 do
+        win = getgenv and getgenv().__PX_EZ_WIN
+        if (win and win.AddTab) or ADMIN.unloaded then break end
+        task.wait(0.1)
+    end
+    if ADMIN.unloaded or not (win and win.AddTab) then return end
+    local ok, tab = pcall(function() return win:AddTab({ Name = "Admin", Icon = "🛡" }) end)
+    if not ok or not tab or not tab.AddToggle then return end
+    ADMIN.tab = tab
+    pcall(function()
+        tab:AddToggle({
+            Name = "Anti-Hit (script users can't hit me)",
+            Default = false,
+            Callback = function(v) ADMIN.setProtect(v) end,
+        })
+        tab:AddToggle({
+            Name = "Show Script Users (EZ tags)",
+            Default = true,
+            Callback = function(v)
+                ADMIN.espOn = v
+                if not v then for p in pairs(ADMIN.tags) do dropTag(p) end end
+            end,
+        })
+    end)
+end)
+
+-- Unload hook the loader/hub can call to tear the admin script down cleanly.
+if getgenv then
+    getgenv().EazyCheats_Admin_Unload = function()
+        ADMIN.unloaded = true
+        ADMIN.setProtect(false)                       -- drop our protection so others can hit us again
+        for player in pairs(ADMIN.tags) do dropTag(player) end
+        getgenv().EazyCheats_Admin_Loaded = nil       -- the Admin tab clears with the hub's own Unload
+    end
+end
+
+return ADMIN

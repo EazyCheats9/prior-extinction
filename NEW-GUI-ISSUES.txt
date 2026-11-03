@@ -1,0 +1,141 @@
+========================================================================
+ PRIOR EXTINCTION — NEW-GUI BUILD: ISSUE LOG (investigation only, DO NOT FIX YET)
+========================================================================
+Context: user is running the ADMIN file with a NEW GUI. Comparing behaviour to
+the known-good PREMIUM build to find what the new GUI regressed.
+Game: Prior Extinction, universe 2527789729, placeVersion 819 (note: memory
+notes were v818 — the game updated).
+Live test account this session: bomblast1234 (8633554).
+Source of truth for "correct": Products/Roblox/Prior Extinction/Testing/Prior Extinction.lua
+Started: 2026-09-17.  Investigator: forked scan session.
+
+RULES: read-only scans only. No :FireServer/:InvokeServer in scans (kicks).
+Never move the character. Do not toggle the user's live features unless asked.
+
+------------------------------------------------------------------------
+ISSUE #1 — Auto Cleanliness dead while Legit Farm on (cleanliness stuck) [CONFIRMED LIVE]
+------------------------------------------------------------------------
+SYMPTOM: "the clean isn't working when legit farm is on." Cleanliness sat frozen
+at 75 for a full 30s watch while Legit Farm walked + Force Eat bit (Food swung
+640->701, so eating was active). Never rose.
+
+ROOT CAUSE: the game moved the Cleanliness stat. It now lives at:
+    CharacterState.Wellbeing.WellbeingReplica.Data.SavableStats.Stats.Cleanliness  (=75 live)
+The hub still reads it from the OLD location(s):
+  * line ~4200  PX.myCleanliness(): reads PX.getCS().Replica.Data.Cleanliness  -> nil
+                (dumped every key of Replica.Data; there is NO Cleanliness field)
+  * line ~3347  ReplicaSet listener only catches a TOP-LEVEL "Cleanliness" path
+                (path[1]=="Cleanliness", path[2]==nil). The value now updates inside
+                the Wellbeing replica (SavableStats.Stats.Cleanliness, different
+                replica id), so PX.cleanliness[] never populates.
+CONSEQUENCE: PX.myCleanliness() returns nil forever. In the clean loop (~4214-4226)
+a nil value skips the re-assert/force branch, so CleanlinessStart is fired exactly
+ONCE (dedupe in setCleaning swallows the rest).
+  - Farm OFF: the single clean action persists server-side -> cleanliness climbs to
+    100 -> looks fine.
+  - Farm ON: Force Eat's "Bite" every ~0.8s interrupts the cleaning action
+    server-side; with the value read dead, the hub never re-sends CleanlinessStart
+    -> stuck.
+NOTE: Force Eat deliberately does NOT hold SetAction "Consuming" (see comment
+~4062-4069), so this is NOT a Consuming-vs-Cleaning action conflict — it's the
+broken value read plus Bite interruptions.
+This is a v819 game regression; it also affects plain Auto Cleanliness and AFK-Farm
+cleanliness, but Legit Farm makes it obvious.
+
+FIX (later): point PX.myCleanliness() + the ReplicaSet listener at the Wellbeing
+replica path/id; likely shorten the CleanlinessStart re-assert interval so it keeps
+up with 0.8s bites.
+
+------------------------------------------------------------------------
+ISSUE #2 — Admin tab is INTERMITTENT under the new GUI (present sometimes, absent others) [RACE / TIMING]
+------------------------------------------------------------------------
+*** UPDATED after a second look: NOT a hard failure. ***
+First scan: window had 5 tabs (AutoFarm/Stats/Combat/Render/Tools), NO Admin, no admin
+toggles rendered — logged as "absent" below.
+Second scan (a few minutes later, after the menu had rebuilt — GUI descendant count went
+5868 -> 5978, character had despawned): window had 6 tabs INCLUDING "Admin" with its 2
+toggles. So the new GUI CAN render the runtime-added Admin tab; it was simply not present
+at the first snapshot.
+=> Real issue is a RACE / reload-timing one: the admin overlay adds its tab exactly once
+   (guarded by getgenv().EazyCheats_Admin_Loaded), so if the hub/menu rebuilds or reloads
+   the window (a reload, a re-exec, or whatever caused the 5868->5978 rebuild here), the
+   fresh window comes up with only its 5 layout tabs and the Admin tab is gone until/unless
+   something re-adds it. The admin file has no re-add-on-rebuild path.
+FIX DIRECTION (later): make the admin overlay re-assert its tab when the window is rebuilt
+(watch __PX_EZ_WIN identity and re-add), or have the hub re-fire a "window ready" hook the
+admin overlay can listen to. Also worth: confirm what triggered the mid-session rebuild
+(peer polishing / reload) so we know how often this bites in normal use.
+NOTE: control counts matched the layout on the good scan (AutoFarm 10 toggles; Stats 7
+toggles + 2 controls = Force Eat/Auto Water/Auto Cleanliness/Inf Oxygen/Freeze Food/Freeze
+Water/Auto-Leave + Farm Dino dropdown + Leave Under slider; Combat 5; Render 16+1+1;
+Tools 11) — so no controls are missing when the menu builds cleanly.
+
+--- original first-scan detail (kept for the record) ---
+SETUP (from workspace/prior-admin.lua): the admin file loads the premium hub, but
+hooks isfile/readfile so the hub loads EZGuiOne-test.lua (the new Galaxy One GUI) as
+its menu library instead of the V1.0 menu, and loads EZGuiOne-prior-layout.lua into
+getgenv().EZGuiOne_Layout. Then it adds an Admin tab at runtime via
+    win:AddTab({ Name = "Admin", Icon = "🛡" })  (win = getgenv().__PX_EZ_WIN)
+and puts two toggles on it: "Anti-Hit (script users can't hit me)" and
+"Show Script Users (EZ tags)".
+
+LIVE EVIDENCE (bomblast1234):
+  * getgenv().EazyCheats_Admin_Loaded == true, EazyCheats_Admin_Unload is a function
+    -> the admin overlay DID load.
+  * getgenv().__PX_EZ_WIN.Tabs == { AutoFarm, Stats, Combat, Render, Tools } — only 5,
+    NO "Admin". AddTab does table.insert(self.Tabs, tab) unconditionally, so the Admin
+    tab was NOT inserted (the admin file wraps AddTab in pcall and returns on failure).
+  * One menu ScreenGui only ("EZGuiV1", 5868 descendants) — NOT a double-load. Tab
+    labels found: AutoFarm/Stats/Combat/Render/Tools/Active. No "Admin" anywhere; the
+    two admin toggles are not rendered.
+CODE REVIEW (galaxy build/parts): EZ._Win:AddTab (60-api.lua:652) and S.page/AddPage
+(40-shell.lua:1180) both look robust and handle an unknown icon ("🛡") gracefully
+(40-shell.lua:1192 falls back), and the layout layer is graceful for a page the profile
+doesn't know (55-layout.lua:149 returns false, no error). So the failure is NOT the
+emoji icon or the missing layout page in an obvious way — needs a live probe.
+STATUS: the Admin tab + its two toggles do not appear. The old V1.0 ez-gui rendered a
+runtime AddTab fine (that's how admin was injected before), so the new GUI regressed
+runtime tab injection OR there's a load-order/timing gap between the hub setting
+__PX_EZ_WIN and the admin overlay's AddTab.
+TO CONFIRM AT FIX TIME (needs permission to mutate the live GUI): call
+    local ok,err = pcall(function() return getgenv().__PX_EZ_WIN:AddTab({Name="ZTEST"}) end)
+via eval and read ok/err + whether a 6th tab renders. That pins timing-vs-error.
+FIX DIRECTION (later): either add an "Admin" page to EZGuiOne-prior-layout.lua (icon +
+sections) so the new GUI treats it as known, or make the admin overlay retry/await the
+new GUI properly, or make the new GUI reliably render runtime AddTab tabs.
+
+------------------------------------------------------------------------
+SCAN COVERAGE / THINGS CHECKED AND OK (v819)
+------------------------------------------------------------------------
+Read-only dependency audit on the live client — all of these still resolve in v819, so
+they are NOT broken (only Cleanliness moved):
+  CharacterState.Replica.Data (State, Stats.Food/Water/Health/Stamina/Oxygen, MaxStats,
+  Multipliers, Growth, Diet), CS.Replica.Id; Wellbeing.WellbeingReplica.Data.SavableStats
+  .Stats (Cleanliness/Proteins/Fats/Calcium/Activity/Comfort/Immunity); ConsumptionData;
+  ConsumableBuffer (FOOD=9 WATER=13 SPAWN=17 — matches hub fallbacks); WeatherData.Weathers;
+  GetGrowthIndex; Knit require; controllers ConsumptionController(+CorpseData,+Replica.Id=live),
+  InterfaceController, DataController, WeatherController; services ServerManagementService,
+  CharacterService; RemoteEvents.ReplicaSignal + .ReplicaSet.
+  (LobbyController = MISS, but that's EXPECTED — it's a lobby-only controller and we were
+   in-game; the hub only uses it in PX.lobbyJoin at the start-screen place.)
+- New GUI menu built fully (5868 descendants, all 5 pages + Active page present).
+- Config apply works under the new GUI: "Config loaded: AutoFarm" and Legit Farm was
+  actually running (walking + eating in the watch), so toggle :Set -> callback fires.
+- No stray debug print()/warn() left in the new GUI parts (only one proper warn in
+  20-util.lua) or in the hub (only the 2 legit "Config saved/loaded" prints). The console
+  lines "false"/"631507"/"630744" are from a manual scan the peer ran, not shipped code.
+
+------------------------------------------------------------------------
+NOT YET CHECKED (for the fix phase / more scanning)
+------------------------------------------------------------------------
+- Per-control name sync: the layout profile (EZGuiOne-prior-layout.lua) was generated
+  against a 675303-byte hub; current source build is 675295 bytes (8-byte drift). Worth a
+  make-layout re-run + a pass that every hub control name/alias still matches, so no row
+  ends up unmatched (ungrouped / no hint).
+- Sliders/dropdowns :Set round-trip under the new GUI (config restore of numeric + dropdown
+  values), and dropdown :Refresh(items, keep) used by Auto Switch + Farm Dino.
+- Keybind rows (Unload Key, Insta Turn) under the new GUI.
+- Notifications (Hub:Notify / SetCore) path.
+- EZ tags (admin ESP) with a second script user present (couldn't test solo).
+------------------------------------------------------------------------
+

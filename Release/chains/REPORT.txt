@@ -1,0 +1,18 @@
+Prior Extinction release built 2026-10-29T00:51:05.579Z
+premium source: C:\Users\phoen\AppData\Local\Temp\prior-chains\prior-posted-plus-chains.lua
+obfuscation: protect.js --seed 42 --rename --verify --max-locals 200 --string-table
+
+free build derived from the premium source
+menus build headless: free AutoFarm is all locked premium rows (8), 5x caps, and premium flags stay off after an all-on config
+mouse hand-back: every scenario passes (premium + free, immediate + deferred signals)
+premium plain: compiles at -O0, watermark x2
+free plain: compiles at -O0, watermark x2
+premium obf: 21900 renames token-identical, 3051 table + 254 plain + 0 inline use sites strings round-trip, no new globals, compiles at -O0, watermark x1
+free obf: 21936 renames token-identical, 3086 table + 254 plain + 0 inline use sites strings round-trip, no new globals, compiles at -O0, watermark x1
+titles: premium plain/obf PREMIUM, free plain/obf FREE
+full load: prior-premium.plain.lua vs prior-premium.obf.lua: top level finished and said "loaded", 177 menu calls identical, 13 loops started identically, 0 stand-in errors identical
+full load: prior-free.plain.lua vs prior-free.obf.lua: top level finished and said "loaded", 121 menu calls identical, 13 loops started identically, 0 stand-in errors identical
+prior-premium.plain.lua  846338 bytes  sha256 541637638c51b941030ecef7afd83f8ff61a3af228099cbb0bfad60b21ada334
+prior-free.plain.lua  848240 bytes  sha256 8ded18694cb75250b0a32754006e746d6c6aa9dc5e21e6476cbad6f971be391f
+prior-premium.obf.lua  573790 bytes  sha256 8a8aad9e3af0458813753a1bc835def2adc85631518f64496ae1872a832748fa
+prior-free.obf.lua  576256 bytes  sha256 ea1289680fc8465c46dcb52836a1c8bb0bdb77e98316404a1761f10749aa4fb6
